@@ -1,0 +1,469 @@
+---
+title: Data wrangling in the tidyverse
+subtitle: Using dplyr and tidy data 
+author: Thomas de Graaff
+date: April 21, 2021
+institute: Department of Spatial Economics
+header-includes:
+- \usepackage{booktabs, array, multirow, dirtree}
+- \usepackage{tikz, pgfplots}
+- \pgfdeclarelayer{background}
+- \pgfsetlayers{background,main}
+output: binb::metropolis
+fontsize: 12pt
+---
+  
+  ```{r,setup, include=FALSE}
+knitr::opts_chunk$set(cache=TRUE)
+```
+
+## Why bother?
+
+- Because working with data
+
+  1. For 20% of your time fancy techniques
+    
+  2. For the other 80%
+    - working with \alert{real} and \alert{messy} data
+    - that has to be read in, cleaned, restructured, changed, described, communicated, visualised, etc.
+    - in a \alert{structural \& consistent} way
+    
+![](../figs/datascience)
+
+## So why R and `tidyverse`?
+
+> R was written by statisticians for statisticians
+
+\begin{columns}
+	\begin{column}{0.5\textwidth}
+		\begin{itemize}
+			\item \alert{multiple} ways in base R
+			\item \texttt{dplyr} and \texttt{ggplot2}---later bundled in \texttt{tidyverse}
+			\begin{itemize}
+			  \item a more \alert{structured, encompassing, readable} approach to data wrangling
+			 \end{itemize}
+			\item \alert{many, many, many} offspring (\texttt{sf}, \texttt{dtplyr}, \texttt{ggraph})
+		\end{itemize}
+	\end{column}
+		\begin{column}{0.5\textwidth}
+		\begin{center}
+			\includegraphics[width=0.9\textwidth]{../figs/wickham}
+		\end{center}
+	\end{column}
+\end{columns}
+
+## Invoking the `tidyverse`
+
+```{r, warning = FALSE}
+library("tidyverse")
+```
+
+## Read in data
+
+```{r}
+library("nycflights13")
+fdata <- flights
+```
+
+display the first six rows of the dataframe `fdata`
+```{r, eval = FALSE}
+summary(fdata)
+```
+or view the dataset
+```{r, eval = FALSE}
+glimpse(fdata)
+```
+
+or look at the structure of the dataset
+```{r, eval = FALSE}
+str(fdata)
+```
+
+## Dataframes and tibbles
+
++ `fdata` is now a tibble (almost the same as a dataframe)
+
++ dataframes and tibbles
+
+  - observations in rows
+  - variables in columns (can be of different type)
+  - a list of equal length vectors
+  
+## Example
+
+```{r}  
+grades <- tibble(
+    name = c("Erik", "Eric", "Thomas"),
+    quiz_1 = c(10, 9, 6),
+    exam = c(7, 6, NA)
+)
+grades
+```
+
+# dplyr
+
+## Why a need for `dplyr`
+
+- Most data manipulation is done in Excel
+
+    - sorting
+    - creating/transforming variables
+    - renaming variables
+    - selecting variables/filtering observations
+
+- But this, and more, can be done in `R` as well:
+
+    - `dplyr` package 
+    - big advantage: work can be reproduced!
+    - faster with bigger datasets
+    - computations with groupings of data
+    - Cheatsheets to be found [here](https://www.rstudio.com/resources/cheatsheets/)
+    
+## `dplyr` basic verbs
+
+- `dplyr` revolves around 5 verbs 
+
+    - `arrange()`
+    - `filter()` 
+    - `select()`
+    - `mutate()`
+    - `summarize()`
+
+- Other important commands (there are more):
+
+    - `group_by()`
+    - `rename()`
+    - `distinct()`
+    - count (`n()`)
+    
+- and can as well merge & restructure datasets
+
+## You might want to sort variables
+
+Sorting by arrival delay
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+arrange(fdata, arr_delay)
+```  
+In descending order
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+arrange(fdata, -arr_delay)
+```  
+Sorting by carrier arrival delay
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+arrange(fdata, carrier, -arr_delay)
+``` 
+
+## Filtering out observations
+
+Only keep for observation on the first of May 
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+fdata_0501 <- filter(fdata, month == 5, day == 1)
+```
+Or remove those pesky missing values
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+filter(fdata, !is.na(arr_time))
+```
+
+## Selecting variables
+
+
+Only select arrival delay and carrier
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+select(fdata, arr_delay, carrier)
+```
+Or select a \alert{range} of variables
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+select(fdata, month : arr_time )
+```       
+
+## Creating new variables
+
+Perhaps you would like to have arrival delay squared
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+mutate(fdata, arr_delay_2 = arr_delay^2 )
+``` 
+Or change from minutes to seconds
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+mutate(fdata, arr_delay_s = arr_delay/60)
+``` 
+
+## And finally summarizing stuff (hey; statistics!)
+
+Say, you would like to have the mean and standard deviation of arrival delay
+```{r, warning=FALSE, message=FALSE}
+summarize(fdata, 
+          ave_arr_delay = mean(arr_delay),
+          sd_arr_delay = mean(arr_delay)
+          )
+``` 
+
+## Hey!
+
+But not automatically corrected for missings!
+```{r, warning=FALSE, message=FALSE}
+summarize(fdata, 
+          ave_arr_delay = mean(arr_delay, na.rm = TRUE),
+          sd_arr_delay = sd(arr_delay, na.rm = TRUE)
+)
+```
+
+## Other stuff
+
+Rename stuff
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+rename(fdata, airline = carrier)
+``` 
+Remove duplicate rows:
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+distinct(fdata, carrier)
+``` 
+Count stuff 
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+summarize(fdata, count = n() )
+``` 
+
+
+## Making this work! Group data
+
+```{r, warning=FALSE, message=FALSE}
+fdata_carrier <- group_by(fdata, carrier)
+summarize(fdata_carrier, 
+          mean_arr_delay = mean(arr_delay, na.rm = TRUE),
+          number = n())
+``` 
+
+## Getting jiggy with it
+
+```{r, warning=FALSE, message=FALSE}
+fdata_carrier_month <- group_by(fdata, carrier, month)
+summarize(fdata_carrier_month, 
+          mean_arr_delay = mean(arr_delay, na.rm = TRUE),
+          number = n())
+``` 
+
+## Chaining your verbs: pipes
+
+You do not need to create all kinds of new intermediate datasets. You can also link commands by using the pipe (`%>%`) operator:
+```{r, warning=FALSE, message=FALSE}
+fdata_carrier <- fdata %>%
+            group_by(carrier) %>%
+            summarize(
+                mean_arr_delay = mean(arr_delay, 
+                                      na.rm = TRUE),
+                number = n())
+```
+
+## In combination with `ggplot2`
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+ggplot(fdata_carrier, 
+       aes(x = reorder(carrier, -mean_arr_delay), 
+           y = mean_arr_delay)) + 
+    geom_bar(stat = "identity") + 
+    theme_bw() + 
+    labs(x = "Airline code", y = "Mean arrival delay")
+```
+
+## Or just go wild!
+
+We want to plot arrival delay by month and carrier:
+```{r, warning=FALSE, message=FALSE}
+fdata_carrier_month <- fdata %>%
+    group_by(carrier, month) %>%
+    summarize(
+        mean_arr_delay = mean(arr_delay, na.rm = TRUE),
+        number = n())
+```
+
+## and plot it!
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+ggplot(fdata_carrier_month, 
+       aes(x = carrier, y = mean_arr_delay)) + 
+    geom_bar(stat = "identity") + 
+    theme_bw() + 
+    labs(x = "Airline code", 
+         y = "Mean arrival delay") + 
+    theme(text = element_text(size = 12) , 
+          axis.text.x = element_text(angle=90, 
+                                     hjust=1))  + 
+    facet_wrap(~month)
+```
+
+# Tidy data
+
+## Tidy data: what's that?
+
+> Happy families are all alike; every unhappy family is unhappy in its own way — Leo Tolstoy
+
+- A dataset is a collection of \alert{values}, usually either numbers (if quantitative) or strings (if qualitative)
+
+  - every column is a variable
+  - every row is an observation
+  - every cell is a single value
+
+- Values are organised in two ways. Every value belongs to a \alert{variable} (rows) and an \alert{observation} (columns).
+
+## When do you need it?
+
+- Requirements of programs or packages
+
+  - for visualisation (`ggplot2` or `sf`)
+  - for estimation (regression (?), conditional logits!, time-series, spatial statistics, `igraph`, etc.)
+  
+- Because you need to restructure data
+
+  - for reading in data (remember sawtooth output!)
+  - data from government websites (Statline!)
+  - structure depends on \alert{unit} of analysis
+  
+## Violations of tidyness
+
+- Column headers are values, not variable names
+
+- Multiple variables are stored in one column
+
+- Variables are stored in both rows and columns
+
+- [Multiple types of observational units are stored in the same table]
+
+- [A single observational unit is stored in multiple tables]
+
+## Example
+
+This is fine if you are interested in the whole educational career
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+grades <- tibble(
+    name = c("Erik", "Eric", "Thomas", "Jos"),
+    quiz_1 = c(10, 9, 6, 8),
+    quiz_2 = c(9, 9, 5, 7),
+    exam = c(7, 6, NA, 7)
+)
+grades
+```
+
+## Example (strikes back)
+
+But if you are interested in grades, then invoke `pivot_longer`
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+grades2 <- grades %>% 
+    pivot_longer(quiz_1:exam, 
+                 names_to = "assessment", 
+                 values_to = "grade") %>% 
+    arrange(name, assessment)
+grades2
+```
+
+## Similar example
+
+Time-series context
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+billboard
+billboard2 <- billboard %>% 
+    pivot_longer(
+        wk1:wk76, 
+        names_to = "week", 
+        values_to = "rank", 
+        values_drop_na = TRUE
+    )
+billboard2
+```
+
+## Multiple values in one cell
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+who1 <- who %>% 
+    pivot_longer(
+        cols = new_sp_m014:newrel_f65, 
+        names_to = "key", 
+        values_to = "cases", 
+        values_drop_na = TRUE
+    )
+who1
+```
+
+## Multiple values in one cell (revisited)
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+who2 <- who1 %>% 
+    mutate(key = stringr::
+             str_replace(key, "newrel", "new_rel")) >% 
+    separate(key, c("new", "type", 
+                    "sexage"), sep = "_") >% 
+    select(-new, -iso2, -iso3) >% 
+    separate(sexage, c("sex", "age"), sep = 1) >% 
+who2
+```
+
+## Variables are stores in rows
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+weather <- tibble(
+    station = c("Amsterdam", "Amsterdam", "Maastricht", "Maastricht"),
+    element = c("min", "max", "min", "max"),
+    d1 = c(4, 11, 3, 15),
+    d2 = c(7, 10, 2, 10),
+    d3 = c(5, 14, 5, 16)
+)
+weather
+```
+
+## Variables are stores in rows (the return of)
+
+Now make wide dataset (`pivot_wider()`)
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+weather2 <- weather %>% 
+    pivot_longer(
+        d1:d3, 
+        names_to = "day", 
+        values_to = "temperature", 
+        values_drop_na = TRUE
+    ) %>% 
+    pivot_wider(names_from = element, values_from = temperature)
+```    
+
+## Conditional logit example 
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+housing_prices <- tibble(
+    prices = c(600000, 500000, 470000),
+    city = c("Aadam", "Bedam", "Cedam"), 
+    historic_centre = c(0, 0, 1)
+)
+housing_prices
+``` 
+
+## Conditional logit example (with a vengeance)
+
+```{r, warning=FALSE, message=FALSE, eval=FALSE}
+housing_prices <- housing_prices %>%
+    mutate(obs = seq(1: nrow(housing_prices)))
+    mutate(chosen = rep(1, nrow(housing_prices) ) ) %>%
+    pivot_wider(names_from = city, 
+                values_from = chosen) %>%
+    replace(is.na(.), 0) %>%
+    pivot_longer(Aadam:Cedam, 
+                 names_to = "city",
+                 values_to =  "chosen")
+housing_prices
+```
+
+## In conclusion
+
+- \alert{Script} everything you do with data
+
+  - both ex-ante and ex-post analysis (during)
+  
+- `tidyverse` package provides excellent support
+
+  - for small/medium sized datasets (until a couple of million obs.)
+  
+- tidying data (restructuring) is more important than you might think as you need to restructure some of your own data
+
+  - \alert{avoid} using Excel
+  - first \alert{think} about unit of analysis and what you want
