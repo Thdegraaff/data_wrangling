@@ -19,14 +19,12 @@ knitr::opts_chunk$set(cache=TRUE)
 
 ## Why bother?
 
-- Because working with data
-
-  1. For 20% of your time fancy techniques
+1. For 20% of your time fancy techniques
     
-  2. For the other 80%
+2. For the other 80%
     - working with \alert{real} and \alert{messy} data
     - that has to be read in, cleaned, restructured, changed, described, communicated, visualised, etc.
-    - in a \alert{structural \& consistent} way
+    - in a \alert{structural, consistent \& reproducable} way
     
 ![](../figs/datascience)
 
@@ -94,7 +92,7 @@ str(fdata)
 ```{r}  
 grades <- tibble(
     name = c("Erik", "Eric", "Thomas"),
-    quiz_1 = c(10, 9, 6),
+    quiz_1 = c(10, 9, 4),
     exam = c(7, 6, NA)
 )
 grades
@@ -114,9 +112,9 @@ grades
 - But this, and more, can be done in `R` as well:
 
     - `dplyr` package 
-    - big advantage: work can be reproduced!
-    - faster with bigger datasets
-    - computations with groupings of data
+    - big advantage: work can be \alert{reproduced}!
+    - faster/scablable with bigger datasets
+    - computations with \alert{groupings} of data
     - Cheatsheets to be found [here](https://www.rstudio.com/resources/cheatsheets/)
     
 ## `dplyr` basic verbs
@@ -316,7 +314,8 @@ ggplot(fdata_carrier_month,
 
   - for reading in data (remember sawtooth output!)
   - data from government websites (Statline!)
-  - structure depends on \alert{unit} of analysis
+  
+- Structure depends on \alert{unit} of analysis
   
 ## Violations of tidyness
 
@@ -332,17 +331,17 @@ ggplot(fdata_carrier_month,
 
 ## Example
 
-This is fine if you are interested in the whole educational career
 
 ```{r, warning=FALSE, message=FALSE, eval=FALSE}
 grades <- tibble(
     name = c("Erik", "Eric", "Thomas", "Jos"),
-    quiz_1 = c(10, 9, 6, 8),
+    quiz_1 = c(10, 9, 4, 8),
     quiz_2 = c(9, 9, 5, 7),
     exam = c(7, 6, NA, 7)
 )
 grades
 ```
+Note: This is fine if you are interested in the whole educational career!
 
 ## Example (strikes back)
 
