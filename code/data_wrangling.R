@@ -1,4 +1,4 @@
-# install.packages("tidyverse")
+#install.packages("tidyverse")
 library("tidyverse")
 
 # install.packages("nycflights13")
@@ -63,8 +63,7 @@ fdata_carrier <- fdata %>%
                 number = n())
 
 ggplot(fdata_carrier, aes(x = reorder(carrier, -mean_arr_delay), y = mean_arr_delay)) + 
-    geom_bar(stat = "identity") + 
-    theme_bw() + 
+    geom_bar(stat = "identity") +
     labs(x = "Airline code", y = "Mean arrival delay")
 
 fdata_carrier_month <- fdata %>%
@@ -164,7 +163,7 @@ housing_prices <- tibble(
 housing_prices
 
 housing_prices <- housing_prices %>%
-    mutate(obs = seq(1: nrow(housing_prices)))
+    mutate(obs = seq(1: nrow(housing_prices))) %>%
     mutate(chosen = rep(1, nrow(housing_prices) ) ) %>%
     pivot_wider(names_from = city, values_from = chosen) %>%
     replace(is.na(.), 0)
